@@ -6,27 +6,36 @@ from ta.trend import EMAIndicator
 import datetime
 
 st.set_page_config(page_title="Bullish Stock Screener", layout="wide")
-st.title("📈 Bullish Stock Screener (NIFTY 50)")
+st.title("📈 Bullish Stock Screener (NIFTY 500)")
 st.markdown("Scans stocks where **Close > EMA 10 & 20** and **RSI > 60**")
 
+# ✅ 1. Fix URL and caching
 @st.cache_data
 def load_symbols():
-    url = 'https://raw.githubusercontent.com/datasets/nifty-50/master/data/constituents.csv'
-    df = pd.read_csv("https://raw.githubusercontent.com/Priyaptl18/stock_screener/main/nifty500.csv")
-    return [s + '.NS' for s in df['Symbol']]
+    url = "https://raw.githubusercontent.com/Priyaptl18/stock_screener/main/nifty500.csv"
+    df = pd.read_csv(url)
+    return [s + ".NS" for s in df['Symbol']]
 
 symbols = load_symbols()
+
+# ✅ 2. Set date range
 end_date = datetime.datetime.now()
 start_date = end_date - datetime.timedelta(days=15)
+
 bullish = []
 
-with st.spinner("🔍 Scanning NIFTY 50 stocks..."):
+# ✅ 3. Screener logic
+with st.spinner("🔍 Scanning NIFTY 500 stocks..."):
     for symbol in symbols:
         try:
             df = yf.download(symbol, start=start_date, end=end_date, interval='1d', progress=False)
+            if df.empty or len(df) < 20:
+                continue
+
             df['rsi'] = RSIIndicator(close=df['Close']).rsi()
             df['ema10'] = EMAIndicator(close=df['Close'], window=10).ema_indicator()
             df['ema20'] = EMAIndicator(close=df['Close'], window=20).ema_indicator()
+
             last = df.iloc[-1]
 
             if last['Close'] > last['ema10'] and last['Close'] > last['ema20'] and last['rsi'] > 60:
@@ -38,9 +47,11 @@ with st.spinner("🔍 Scanning NIFTY 50 stocks..."):
                     'RSI': round(last['rsi'], 2)
                 })
 
-        except:
+        except Exception as e:
+            print(f"Error with {symbol}: {e}")
             continue
 
+# ✅ 4. Display results
 if bullish:
     st.success(f"✅ Found {len(bullish)} bullish stocks")
     st.dataframe(pd.DataFrame(bullish))
