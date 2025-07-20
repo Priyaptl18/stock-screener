@@ -12,7 +12,7 @@ st.markdown("Scans stocks where **Close > EMA 10 & 20** and **RSI > 60**")
 @st.cache_data
 def load_symbols():
     url = 'https://raw.githubusercontent.com/datasets/nifty-50/master/data/constituents.csv'
-    df = pd.read_csv("https://raw.githubusercontent.com/Priyaptl18/YourRepo/main/i am sharing 'nifty500' with you.csv")
+    df = pd.read_csv("https://raw.githubusercontent.com/Priyaptl18/stock_screener/main/nifty500.csv")
     return [s + '.NS' for s in df['Symbol']]
 
 symbols = load_symbols()
